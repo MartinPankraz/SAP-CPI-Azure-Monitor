@@ -1,0 +1,39 @@
+{
+    "conditions": [
+      {
+        "name": "CPIIntegrationFlowIsFailed",
+        "propertyKey": "eventType",
+        "predicate": "EQUALS",
+        "propertyValue": "CPIIntegrationFlowExecutionFailure",
+        "labels": [],
+        "description": ""
+      }
+    ],
+    "actions": [
+      
+      {
+        "name": "LogicAppHook",
+        "state": "ENABLED",
+        "labels": [],
+        "description": "",
+        "destination": "https://prod-21.northeurope.logic.azure.com:443/workflows/YOURPATH",
+        "sslTrustAll": false,
+        "type": "WEB_HOOK"
+      }
+    ],
+    "subscriptions": [
+      {
+        "name": "FailedIFlow",
+        "conditions": [
+          "CPIIntegrationFlowIsFailed"
+        ],
+        "actions": [
+          "LogicAppHook"
+        ],
+        "labels": [
+          "CPI"
+        ],
+        "state": "ENABLED"
+      }
+    ]
+  }
