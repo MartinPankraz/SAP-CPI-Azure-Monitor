@@ -1,0 +1,167 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_SCPAlertNotificationAdapter_la_name": {
+            "defaultValue": "SCPAlertNotificationAdapter-la",
+            "type": "String"
+        },
+        "connections_azurelog_name": {
+            "defaultValue": "azureloganalyticsdatacollector",
+            "type": "String"
+        },
+        "subscription": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "loganalytics_workspace_name": {
+            "defaultValue": "SCPLogsForCPI",
+            "type": "String"
+        },
+        "location": {
+            "defaultValue": "",
+            "type": "String"
+        },
+        "resource_group_of_loganalytics": {
+            "defaultValue": "",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_SCPAlertNotificationAdapter_la_name')]",
+            "location": "[parameters('location')]",
+            "dependsOn": ["[resourceId('Microsoft.Web/connections', parameters('connections_azurelog_name'))]"],
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "body": {
+                                            "type": "string"
+                                        },
+                                        "category": {
+                                            "type": "string"
+                                        },
+                                        "eventTimestamp": {
+                                            "type": "integer"
+                                        },
+                                        "eventType": {
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "region": {
+                                            "type": "string"
+                                        },
+                                        "regionType": {
+                                            "type": "string"
+                                        },
+                                        "resource": {
+                                            "properties": {
+                                                "globalAccount": {
+                                                    "type": "string"
+                                                },
+                                                "resourceGroup": {
+                                                    "type": "string"
+                                                },
+                                                "resourceName": {
+                                                    "type": "string"
+                                                },
+                                                "resourceType": {
+                                                    "type": "string"
+                                                },
+                                                "subAccount": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "severity": {
+                                            "type": "string"
+                                        },
+                                        "subject": {
+                                            "type": "string"
+                                        },
+                                        "tags": {
+                                            "properties": {
+                                                "cpi:IntegrationArtifact.Id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Send_Data": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": "[[ @{triggerBody()}]",
+                                "headers": {
+                                    "Log-Type": "CPIFailure",
+                                    "time-generated-field": "@{triggerBody()?['eventTimestamp']}"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureloganalyticsdatacollector']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/api/logs"
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureloganalyticsdatacollector": {
+                                "connectionId": "[concat('/subscriptions/',parameters('subscription'), '/resourceGroups/', parameters('resource_group_of_loganalytics'),'/providers/Microsoft.Web/connections/', parameters('connections_azurelog_name'))]",
+                                "connectionName": "[parameters('connections_azurelog_name')]",
+                                "id": "[concat('/subscriptions/',parameters('subscription'),'/providers/Microsoft.Web/locations/',parameters('location'),'/managedApis/', parameters('connections_azurelog_name'))]"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[parameters('connections_azurelog_name')]",
+            "location": "[parameters('location')]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "[parameters('connections_azurelog_name')]",
+                "customParameterValues": {},
+                "api": {
+                    "id": "[concat('/subscriptions/',parameters('subscription'),'/providers/Microsoft.Web/locations/',parameters('location'),'/managedApis/', parameters('connections_azurelog_name'))]"
+                }
+            }
+        }
+    ]
+}
