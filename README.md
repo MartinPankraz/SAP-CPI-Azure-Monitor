@@ -1,5 +1,7 @@
 # SAP-CPI-Azure-Monitor
-Repos contains artifacts to implement SAP CPI monitoring with Azure Monitor Workbooks and Log Analytics
+Repos contains artifacts to implement SAP CPI monitoring with Azure Monitor Workbooks and Log Analytics.
+
+Find the associated workbook on the [Azure Monitor Community](https://github.com/microsoft/AzureMonitorCommunity/tree/master/Solutions/SAP-SCP-Monitoring).
 
 Both approaches need an OData user (CPI_USER) configured to call the CPI API regularly for existing failed messages on the processing log.
 
